@@ -1,9 +1,12 @@
+const port = 8080;
 var http = require('http');
 var server = http.createServer();
 var socket_io = require('socket.io');
-server.listen(8080);
+server.listen(port);
 var io = socket_io();
 io.attach(server);
+
+console.log('Server started on port ' + port)
 
 const rooms = {};
 
@@ -27,16 +30,21 @@ io.on('connection', function(socket){
       gsocket.emit('chatReady');
     })
   }
+  else {
+    console.log('He was first');
+    socket.emit('wasFirst');
+  }
 
 
   socket.on('newMessage', (message) => {
-    console.log(message);
-    rooms[chatRoom].forEach((gsocket) => {
-      if (socket != gsocket) {
-        console.log('sending message to group ' + chatRoom)
-        gsocket.emit('newMessage', message);
-      }
-    })
+    if (message.contents.length > 0) {
+      rooms[chatRoom].forEach((gsocket) => {
+        if (socket != gsocket) {
+          console.log('sending message to group ' + chatRoom, message)
+          gsocket.emit('newMessage', message);
+        }
+      })
+    }
   });
 
   socket.on('disconnect', function () {
